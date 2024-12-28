@@ -18,16 +18,21 @@ contract Fundme{
 
     address public  owner;
 
+    uint256 deploymentTimestamp;
+    uint256 lockTime; //second
+
     /**
      * Network: Sepolia
      * Aggregator: ETH/USD
      * Address: 0x694AA1769357215DE4FAC081bf1f309aDC325306
      */
-    constructor() {
+    constructor(uint256 _lockTime) {
         dataFeed = AggregatorV3Interface(
             0x694AA1769357215DE4FAC081bf1f309aDC325306
         );
         owner = msg.sender;
+        deploymentTimestamp = block.timestamp;
+        lockTime = _lockTime;
     }
 
     function getChainlinkDataFeedLatestAnswer() public view returns (int) {
@@ -44,6 +49,7 @@ contract Fundme{
 
     function fund()external payable {
         require(convertEthToUSD(msg.value) >= MINIMUN_VALUE);
+        require(block.timestamp < deploymentTimestamp+lockTime, "windows is closed");
         fundersToAmount[msg.sender] = msg.value;
     }
 
@@ -55,6 +61,8 @@ contract Fundme{
     function getFund() external {
         require(convertEthToUSD(address(this).balance) >= TARGET, "Target is not reached");
         require(msg.sender == owner, "this function can only be called by owner");
+        require(block.timestamp >= deploymentTimestamp+lockTime, "windows is not closed");
+
         //transfer: 如果交易失败，则交易会回滚，但是gas不会
         // payable(msg.sender).transfer(address(this).balance);
         //send: 会有返回值 return true false
@@ -71,6 +79,8 @@ contract Fundme{
         require(convertEthToUSD(address(this).balance) < TARGET, "Target is reached");
         uint256 amount = fundersToAmount[msg.sender];
         require(amount>0, "there is no fund for you");
+        require(block.timestamp >= deploymentTimestamp+lockTime, "windows is not closed");
+
         //最好是先清空余额 再转账
         fundersToAmount[msg.sender] = 0;
         bool success;
