@@ -29,6 +29,46 @@
 				],
 				"stateMutability": "view",
 				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getFund",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "owner",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "refund",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "newOwner",
+						"type": "address"
+					}
+				],
+				"name": "transferOwnership",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
 			}
 		],
 		"devdoc": {
@@ -71,11 +111,11 @@
 			]
 		},
 		"Fundme.sol": {
-			"keccak256": "0x9747fd1e3445e8086abe60ab7d9adbb6e8e77c3da0e567ebe440e2804f92dd7f",
+			"keccak256": "0xc7f6b85a4c5f4d794946ed7de31a3f3dabb87dd37ae52fc87a6a1635b67e8d01",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://956189d48cc0ce78568cec6ebc7c3c8181fdb3ee0b7da121c51ebdd4056a1c9f",
-				"dweb:/ipfs/QmUYbNZoihfPKJQiaxa3FNfkrVE9oyq8PdUqRRjYC2G6LP"
+				"bzz-raw://4f260f6222ebc4559a0fe488c5a89d186c646aa643bc4017d18df9266f078f43",
+				"dweb:/ipfs/QmRFM64CcYXPxBQ3t8S5BfEnP4LNsFXj6i5Uob3VSXRxav"
 			]
 		}
 	},
