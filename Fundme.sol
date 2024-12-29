@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 //收款
 //记录投资人并查看
@@ -10,16 +11,20 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interf
 contract Fundme{
     AggregatorV3Interface internal dataFeed;
 
-    mapping (address => uint256) internal fundersToAmount;
+    mapping (address => uint256) private  fundersToAmount;
 
     uint256 MINIMUN_VALUE = 1 * 10 ** 18;
 
     uint constant TARGET = 10 * 10 ** 18;
 
-    address public  owner;
+    address public owner;
 
     uint256 deploymentTimestamp;
     uint256 lockTime; //second
+
+    address erc20Addr;
+
+    bool public getFundSuccess = false;
 
     /**
      * Network: Sepolia
@@ -57,11 +62,11 @@ contract Fundme{
         return amountCount * uint(getChainlinkDataFeedLatestAnswer()) / 10**8;
     }
 
-    //提取资产
-    function getFund() external {
+    //众筹者提取资产
+    function getFund() external windowsClosed onlyOwner{
         require(convertEthToUSD(address(this).balance) >= TARGET, "Target is not reached");
-        require(msg.sender == owner, "this function can only be called by owner");
-        require(block.timestamp >= deploymentTimestamp+lockTime, "windows is not closed");
+        // require(msg.sender == owner, "this function can only be called by owner");
+        // require(block.timestamp >= deploymentTimestamp+lockTime, "windows is not closed");
 
         //transfer: 如果交易失败，则交易会回滚，但是gas不会
         // payable(msg.sender).transfer(address(this).balance);
@@ -72,15 +77,15 @@ contract Fundme{
         bool success;
         (success, ) = payable(msg.sender).call{value: address(this).balance}("");
         require(success, "tx failed");
-
+        fundersToAmount[msg.sender] = 0;
+        getFundSuccess = true;
     }
 
-    function refund() external {
+    //投资人退款
+    function refund() external windowsClosed{
         require(convertEthToUSD(address(this).balance) < TARGET, "Target is reached");
         uint256 amount = fundersToAmount[msg.sender];
         require(amount>0, "there is no fund for you");
-        require(block.timestamp >= deploymentTimestamp+lockTime, "windows is not closed");
-
         //最好是先清空余额 再转账
         fundersToAmount[msg.sender] = 0;
         bool success;
@@ -96,5 +101,30 @@ contract Fundme{
     function transferOwnership(address newOwner) public {
         require(msg.sender == owner, "this function can only be called by owner");
         owner = newOwner;
+    }
+
+    //设置该众筹合约的erc20通证合约地址
+    function setERC20Addr(address _erc20Addr) public onlyOwner {
+        erc20Addr = _erc20Addr;
+    }
+
+    //设置某个地址所拥有的token数量
+    function setFunderToAmount(address funderAddr, uint256 amount) external {
+        require(msg.sender == erc20Addr, "You dont have permission to call this function");
+        fundersToAmount[funderAddr] = amount;
+    }
+
+    function queryFundersToAmount(address funderAddr) public view returns(uint256){
+        return fundersToAmount[funderAddr];
+    }
+
+    modifier windowsClosed(){
+        require(block.timestamp >= deploymentTimestamp+lockTime, "windows is not closed");
+        _;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "this function can only be called by owner");
+        _;
     }
 }
